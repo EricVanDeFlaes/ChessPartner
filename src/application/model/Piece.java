@@ -1,50 +1,62 @@
 package application.model;
 
+import application.controller.ChessEngine;
+import application.main.Application;
+
 public class Piece {
 	public enum TypePiece {
 		King, Queen, Bishop, Knight, Rook, Pawn;
 	}
 	
-	private final TypePiece type;
-	private final Player player;
+	public final TypePiece type;
+	public final Player player;
 	private Case position;
-	private boolean bMoved;
+	private boolean moved;
 	
-	public Piece(TypePiece type, Player player, Case position) {
+	protected Piece(TypePiece type, Player player, boolean moved, Case position) {
 		this.type = type;
 		this.player = player;
 		this.position = position;
-		this.bMoved = false;
+		this.moved = moved;
 		position.setContent(this);
-		player.getPieces().add(this);
+		player.pieces.add(this);
 	}
 	
-	public TypePiece getType() {
-		return type;
+	protected Piece(HistoryPiece piece, Case position) {
+		this(piece.type, Player.getPlayer(piece.color), piece.moved, position); 
 	}
 	
-	public Player getPlayer() {
-		return player;
-	}
-	
-	public Case getPosition() {
-		return position;
+	public Piece(TypePiece type, Player player, Case position) {
+		this(type, player, false, position);
 	}
 	
 	public void remove() {
 		position.setContent(null);
-		player.getPieces().remove(this);
+		player.pieces.remove(this);
 	}
 	
 	public void move(Case destination) {
 		position.setContent(null);
 		if (destination.getContent() != null) destination.getContent().remove();
 		position = destination;
-		destination.setContent(this);
-		bMoved = true;
+		position.setContent(this);
+		moved = true;
+	}
+	
+	public void undo(HistoryMove move) {
+		ChessEngine engine = Application.getApp().engine;
+		position.setContent(null);
+		position = engine.getCase(move.origin);
+		position.setContent(this);
+		this.moved = move.originPiece.moved;
+		if (move.capturedPiece != null) new Piece(move.capturedPiece, engine.getCase(move.destination));
+	}
+	
+	public Case getPosition() {
+		return position;
 	}
 	
 	public boolean hasMoved() {
-		return bMoved;
+		return moved;
 	}
 }

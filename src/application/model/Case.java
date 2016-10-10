@@ -1,5 +1,8 @@
 package application.model;
 
+import java.io.Serializable;
+import java.util.HashSet;
+
 public class Case {
 	public enum Color {
 		White, Black;
@@ -9,8 +12,9 @@ public class Case {
 		}
 	}
 	
-	public static class Coord {
-		private final int column, line;
+	public static class Coord implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public final int column, line;
 		
 		public Coord(int column, int line) {
 			this.column = column;
@@ -18,27 +22,11 @@ public class Case {
 		}
 		
 		/**
-		 * renvoie l'index de la colonne [0-7]
-		 * @return
-		 */
-		public int getColumn() {
-			return column;
-		}
-		
-		/**
 		 * renvoie le nom de la colonne [A-H]
 		 * @return
 		 */
 		public String getColumnName() {
-			return String.valueOf((char)('A' + column));
-		}
-		
-		/**
-		 * renvoie l'index de la ligne [0-7]
-		 * @return
-		 */
-		public int getLine() {
-			return line;
+			return String.valueOf((char)('a' + column));
 		}
 		
 		/**
@@ -55,51 +43,41 @@ public class Case {
 		}
 	}
 	
-	private final Color color;
-	private final Coord coord;
+	public final Color color;
+	public final Coord coord;
 	private Piece content;
+	private HashSet<ICaseListener> listeners;
 	
 	/**
 	 * Constructeur de Case
 	 * @param column
 	 * @param ligne
+	 * @param color
 	 */
 	public Case(int column, int line, Color color) {
 		coord = new Coord(column, line);
 		this.color = color;
 		content = null;
+		listeners = new  HashSet<ICaseListener>();
 	}
 	
-	/**
-	 * renvoie les coordonnées de la case
-	 * @return les coordonnées
-	 */
-	public Coord getCoord() {
-		return coord;
+	public void addListener(ICaseListener listener) {
+		listeners.add(listener);
 	}
-	
-	/**
-	 * Renvoie la couleur de la case
-	 * @return
-	 */
-	public Color getColor() {
-		return color;
+		
+	public void removeListener(ICaseListener listener) {
+		listeners.remove(listener);
 	}
-	
-	/**
-	 * renvoie le contenu de la case
-	 * @return null si la case ne contient pas de pièce
-	 */
+		
 	public Piece getContent() {
 		return content;
 	}
 	
-	/**
-	 * définit le contenu d'une case
-	 * @param piece null pour indiquer que la case ne contient plus de pièce
-	 */
 	public void setContent(Piece piece) {
 		content = piece;
+		for (ICaseListener listener: listeners) {
+			listener.contentChanged(piece);
+		}
 	}
 	
 	@Override

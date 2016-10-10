@@ -1,6 +1,25 @@
 package application.model;
 
 public class Board {
+	public static class Delta {
+		public final int column, line;
+		
+		public Delta(int column, int line) {
+			this.column = column;
+			this.line = line;
+		}
+	}
+	
+	public static enum Direction {
+		TopLeft(-1, 1), Top(0, 1), TopRight(1, 1), Left(-1, 0), Right(1,0), BottomLeft(-1, -1), Bottom(0, -1), BottomRight(1, -1);
+		
+		public final Delta delta;
+		
+		Direction (int deltaColumn, int deltaLine) {
+			delta = new Delta(deltaColumn, deltaLine);
+		}
+	}
+	
 	/**
 	 * Le tableau est défini par [colonne][ligne] avec [0][0] représentant la case A1
 	 */
@@ -18,15 +37,18 @@ public class Board {
 		}
 	}
 	
+	/**
+	 * Prépare le plateau pour une nouvelle partie (replace toutes les pieces)
+	 */
 	public void setInitialPosition() {
 		// On commence par virer les pieces de chaque joueur
 		Player white = Player.getPlayer(Player.Color.White);
-		while (white.getPieces().size() > 0) {
-			white.getPieces().get(0).remove();
+		while (white.pieces.size() > 0) {
+			white.pieces.get(0).remove();
 		}
 		Player black = Player.getPlayer(Player.Color.Black);
-		while (black.getPieces().size() > 0) {
-			black.getPieces().get(0).remove();
+		while (black.pieces.size() > 0) {
+			black.pieces.get(0).remove();
 		}
 		
 		// On charge les positions initiales
@@ -50,12 +72,35 @@ public class Board {
 					break;
 				case 4:
 					typePiece = Piece.TypePiece.King;
-					break;			
+					break;
 			}
 			new Piece(typePiece, white, cases[column][0]);
 			new Piece(Piece.TypePiece.Pawn, white, cases[column][1]);
 			new Piece(Piece.TypePiece.Pawn, black, cases[column][6]);
 			new Piece(typePiece, black, cases[column][7]);
 		}
-	}	
+	}
+	
+	/**
+	 * renvoie la case situé à delta de la case origin
+	 * @param origin
+	 * @param delta
+	 * @return null si le delta sort du plateau
+	 */
+	public Case getCaseDelta(Case origin, Delta delta) {
+		int column = origin.coord.column + delta.column;
+		int line = origin.coord.line + delta.line;
+		if (column < 0 || column > 7 || line < 0 || line > 7) return null;
+		return cases[column][line];
+	}
+	
+	/**
+	 * renvoie la case contigue à la case d'origine dans la direction donnée
+	 * @param origin
+	 * @param direction
+	 * @return null s'il n'existe pas de case dans cette direction (bord du plateau)
+	 */
+	public Case getCaseContigue(Case origin, Direction direction) {
+		return getCaseDelta(origin, direction.delta);
+	}
 }

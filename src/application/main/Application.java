@@ -1,17 +1,17 @@
 package application.main;
 
-import application.model.Board;
+import application.controller.ChessEngine;
 
 public class Application {
 	private static Application app;
 	
-	public final double version = 0.1;	
-	public final Board board;
+	public final double version = 0.1;
+	public final ChessEngine engine;
 	public final MainWindow mainWindow;
 	
 	Application() {
 		app = this;
-		board = new Board();
+		engine = new ChessEngine();
 		mainWindow = new MainWindow();
 	}
 	
