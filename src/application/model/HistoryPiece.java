@@ -11,7 +11,7 @@ public class HistoryPiece implements Serializable {
 	public final TypePiece type;
 	public final boolean moved;
 	
-	protected HistoryPiece(TypePiece type, Color color, boolean moved) {
+	public HistoryPiece(TypePiece type, Color color, boolean moved) {
 		this.type = type;
 		this.color = color;
 		this.moved = moved;

@@ -12,8 +12,10 @@ import application.model.Board.Delta;
 import application.model.Board.Direction;
 import application.model.Case;
 import application.model.Case.Coord;
+import application.model.Piece.TypePiece;
 import application.model.History;
 import application.model.HistoryMove;
+import application.model.HistoryPiece;
 import application.model.Piece;
 import application.model.Player;
 
@@ -29,7 +31,6 @@ public class ChessEngine {
 	
 	public ChessEngine() {
 		board = new Board();
-		newGame();
 	}
 	
 	/**
@@ -48,6 +49,17 @@ public class ChessEngine {
 	 * @param destination
 	 */
 	private void doMove(Piece piece, Case destination) {
+		if (piece.type==Piece.TypePiece.King && Math.abs(piece.getPosition().coord.column - destination.coord.column)>1) {
+			// gestion du roque, on va chercher la tour pour la déplacer
+			for (Piece rook: piece.player.pieces) {
+				if ((rook.type==Piece.TypePiece.Rook) &&
+						((destination.coord.column==2 && rook.getPosition().coord.column==0) ||
+						(destination.coord.column==6 && rook.getPosition().coord.column==7))) {
+					rook.move(board.cases[(destination.coord.column==2)?3:5][destination.coord.line]);
+					break;
+				}
+			}
+		}
 		piece.move(destination);
 		player = player.getOpponent();
 	}
@@ -59,6 +71,8 @@ public class ChessEngine {
 		history = new History();
 		player = Player.getPlayer(Player.Color.White);
 		board.setInitialPosition();
+		Application.getApp().mainWindow.panelInfo.textArea.setText("");
+		Application.getApp().mainWindow.panelInfo.panelHistorique.refresh(history);
 	}
 	
 	/**
@@ -67,11 +81,31 @@ public class ChessEngine {
 	public void undo() {
 		if (!history.canUndo()) return;
 		HistoryMove move = history.undo();
-		getCase(move.destination).getContent().undo(move);
+		Piece piece = getCase(move.destination).getContent();
+		// gestion du roque, on undo également la tour
+		if (piece.type==TypePiece.King && Math.abs(move.origin.column - move.destination.column)>1) {
+			Case rookOrigin, rookDestination;
+			switch (move.destination.column) {
+				case 6: // petit roque
+					rookDestination = board.cases[5][move.origin.line];
+					rookOrigin = board.cases[7][move.origin.line];
+					break;
+				default: // grand roque
+					rookDestination = board.cases[3][move.origin.line];
+					rookOrigin = board.cases[0][move.origin.line];
+					break;
+			}
+			HistoryPiece rook = new HistoryPiece(Piece.TypePiece.Rook, piece.player.color, false);
+			HistoryMove rookMove = new HistoryMove(rook, rookOrigin.coord, rookDestination.coord);
+			getCase(rookMove.destination).getContent().undo(rookMove);
+		}
+		piece.undo(move);
+
 		// On supprime le coup de la notation de la partie
 		JTextArea txtArea = Application.getApp().mainWindow.panelInfo.textArea;
 		String notation = move.toString() + " ";
 		txtArea.setText(txtArea.getText().substring(0, txtArea.getText().length()-notation.length()));
+		Application.getApp().mainWindow.panelInfo.panelHistorique.refresh(history);
 	}
 	
 	/**
@@ -82,6 +116,7 @@ public class ChessEngine {
 		HistoryMove move = history.redo();
 		doMove(getCase(move.origin).getContent(), Application.getApp().engine.getCase(move.destination));
 		notateMove(move);
+		Application.getApp().mainWindow.panelInfo.panelHistorique.refresh(history);
 	}	
 	
 	/**
@@ -89,7 +124,6 @@ public class ChessEngine {
 	 */
 	public void moveFirst() {
 		while (history.canUndo()) undo();
-		
 	}
 	
 	/**
@@ -118,24 +152,11 @@ public class ChessEngine {
 	public void move(Piece piece, Case destination) throws ChessEngineException {
 		if (piece.player!=player) throw new ChessEngineException("WrongPlayer");
 		if (!getValidMoves(piece).contains(destination)) throw new ChessEngineException("WrongDestination");
-		if (piece.type==Piece.TypePiece.King) {
-			// est-ce un roque ?
-			if (Math.abs(piece.getPosition().coord.column - destination.coord.column)>1) {
-				// on va chercher la tour pour la déplacer
-				for (Piece rook: piece.player.pieces) {
-					if ((rook.type==Piece.TypePiece.Rook) &&
-							((destination.coord.column==2 && rook.getPosition().coord.column==0) ||
-							(destination.coord.column==6 && rook.getPosition().coord.column==7))) {
-						rook.move(board.cases[(destination.coord.column==2)?3:5][destination.coord.line]);
-						break;
-					}
-				}
-			}
-		}
 		HistoryMove move = new HistoryMove(piece, destination);
 		history.add(move);
 		doMove(piece, destination);
 		notateMove(move);
+		Application.getApp().mainWindow.panelInfo.panelHistorique.refresh(history);
 	}
 
 	/**

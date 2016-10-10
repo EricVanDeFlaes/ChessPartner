@@ -1,12 +1,12 @@
 package application.view;
 
 import javax.swing.JPanel;
-
 import java.awt.GridLayout;
 
 public class Board extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private final Case cases[][];
+	private application.model.Player.Color side;
 	
 	/**
 	 * On construit le plateau par défaut avec les blancs jouant en bas
@@ -30,6 +30,7 @@ public class Board extends JPanel {
 	 * @param playerColor
 	 */
 	public void setSide(application.model.Player.Color playerColor) {
+		side = playerColor;
 		removeAll();
 		for (int line=0; line < 8; line++) {
 			for (int column=0; column < 8; column++) {
@@ -37,5 +38,13 @@ public class Board extends JPanel {
 				add(viewCase);
 			}
 		}
+		validate();
+	}
+	
+	/**
+	 * Inverse le plateau
+	 */
+	public void switchSide() {
+		setSide((side==application.model.Player.Color.White)?application.model.Player.Color.Black:application.model.Player.Color.White);
 	}
 }

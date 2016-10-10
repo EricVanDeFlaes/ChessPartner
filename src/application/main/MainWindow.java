@@ -23,11 +23,13 @@ import java.awt.event.InputEvent;
 public class MainWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private static final ResourceBundle forms = ResourceBundle.getBundle("resources.forms"); //$NON-NLS-1$
+	private final JMenuItem mntmNewGame = new JMenuItem(forms.getString("MainWindow.mntmNewGame.text")); //$NON-NLS-1$
 	private final JMenuItem mntmLoad = new JMenuItem(forms.getString("MainWindow.mntmLoad.text")); //$NON-NLS-1$
 	private final JMenuItem mntmSave = new JMenuItem(forms.getString("MainWindow.mntmSave.text")); //$NON-NLS-1$
+	private final JMenuItem mntmSwitchSide = new JMenuItem(forms.getString("MainWindow.mntmSwitchSide.text")); //$NON-NLS-1$
 	private final JMenuItem mntmQuit = new JMenuItem(forms.getString("MainWindow.mntmQuit.text")); //$NON-NLS-1$
-	private final JMenuItem mntmNewGame = new JMenuItem(forms.getString("MainWindow.mntmNewGame.text")); //$NON-NLS-1$
 
+	private final Board panelBoard = new Board(Application.getApp().engine.board);
 	public final PanelInfo panelInfo = new PanelInfo();
 		
 	public MainWindow() {
@@ -35,32 +37,35 @@ public class MainWindow extends JFrame implements ActionListener {
 		this.setSize(600, 450);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setLayout(new BorderLayout(0, 0));		
-		Board panelBoard = new Board(Application.getApp().engine.board);
 		getContentPane().add(panelBoard, BorderLayout.CENTER);
 		getContentPane().add(panelInfo, BorderLayout.EAST);
 		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 		
-		JMenu mnFile = new JMenu(forms.getString("MainWindow.mnFichier.text"));
-		menuBar.add(mnFile);
+		JMenu mnGame = new JMenu(forms.getString("MainWindow.mnGame.text"));
+		menuBar.add(mnGame);
 		
 		mntmNewGame.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
 		mntmNewGame.addActionListener(this);
-		mnFile.add(mntmNewGame);
-		mnFile.add(new JSeparator());
+		mnGame.add(mntmNewGame);
+		mnGame.add(new JSeparator());
 		
 		mntmLoad.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_MASK));
 		mntmLoad.addActionListener(this);	
-		mnFile.add(mntmLoad);
+		mnGame.add(mntmLoad);
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
 		mntmSave.addActionListener(this);
-		mnFile.add(mntmSave);
-		mnFile.add(new JSeparator());
+		mnGame.add(mntmSave);
+		mnGame.add(new JSeparator());
+		
+		mnGame.add(mntmSwitchSide);
+		mntmSwitchSide.addActionListener(this);
+		mnGame.add(new JSeparator());
 		
 		mntmQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_MASK));
-		mntmQuit.addActionListener(this);
-		mnFile.add(mntmQuit);
+		mntmQuit.addActionListener(this);		
+		mnGame.add(mntmQuit);
 		this.setVisible(true);
 	}
 
@@ -94,6 +99,8 @@ public class MainWindow extends JFrame implements ActionListener {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		} else if (event.getSource()==mntmSwitchSide) {
+			panelBoard.switchSide();
 		}
 	}	
 }

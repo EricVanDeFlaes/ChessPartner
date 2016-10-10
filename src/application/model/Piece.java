@@ -45,9 +45,7 @@ public class Piece {
 	
 	public void undo(HistoryMove move) {
 		ChessEngine engine = Application.getApp().engine;
-		position.setContent(null);
-		position = engine.getCase(move.origin);
-		position.setContent(this);
+		move(engine.getCase(move.origin));
 		this.moved = move.originPiece.moved;
 		if (move.capturedPiece != null) new Piece(move.capturedPiece, engine.getCase(move.destination));
 	}

@@ -23,6 +23,13 @@ public class HistoryMove implements Serializable {
 		capturedPiece = (destination.getContent() == null)? null : new HistoryPiece(destination.getContent());
 	}
 	
+	public HistoryMove(HistoryPiece piece, Coord origin, Coord destination) {
+		originPiece = piece;
+		this.origin = origin;
+		this.destination = destination;
+		capturedPiece = null; 
+	}
+	
 	/**
 	 * Notation d'un coup
 	 */

@@ -8,6 +8,7 @@ public class PanelInfo extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	public final JTextArea textArea = new JTextArea();
+	public final PanelHistorique panelHistorique = new PanelHistorique();
 	
 	public PanelInfo() {
 		setLayout(new BorderLayout(0, 0));
@@ -17,7 +18,6 @@ public class PanelInfo extends JPanel {
 		textArea.setEditable(false);
 		add(textArea, BorderLayout.CENTER);
 		
-		PanelHistorique panelHistorique = new PanelHistorique();
 		add(panelHistorique, BorderLayout.SOUTH);
 	}
 }

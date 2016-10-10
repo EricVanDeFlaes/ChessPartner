@@ -13,6 +13,7 @@ public class Application {
 		app = this;
 		engine = new ChessEngine();
 		mainWindow = new MainWindow();
+		engine.newGame();
 	}
 	
 	/**
