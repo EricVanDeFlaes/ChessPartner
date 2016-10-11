@@ -114,7 +114,7 @@ public class PieceHolder extends JLabel implements ICaseListener {
 			setIcon(null);
 		} else {
 			String name = piece.type.toString()+piece.player.color.toString();
-			ImageIcon image = new ImageIcon("C:/Developpement/workspace/ChessPartner/src/resources/icones/"+name+".png");
+			ImageIcon image = new ImageIcon(getClass().getClassLoader().getResource("resources/icones/"+name+".png"));
 			setIcon(image);
 		}
 	}
