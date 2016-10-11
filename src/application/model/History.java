@@ -57,4 +57,14 @@ public class History implements Serializable {
 		if (isLast()) return null;
 		return list.get(++current);
 	}
+	
+	/**
+	 * crée une nouvelle branche dans l'historique avec le coup passé en paramêtre
+	 * mais sans le jouer (il est jouable par redo)
+	 * @param move
+	 */
+	public void setNextMove(HistoryMove move) {
+		add(move);
+		--current;
+	}
 }

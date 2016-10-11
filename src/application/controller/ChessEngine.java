@@ -22,7 +22,6 @@ import application.model.Player;
 /**
  * Classe gérant une partie d'échec
  * @author Addstones
- *
  */
 public class ChessEngine {
 	public final Board board;
@@ -157,6 +156,16 @@ public class ChessEngine {
 		doMove(piece, destination);
 		notateMove(move);
 		Application.getApp().mainWindow.panelInfo.panelHistorique.refresh(history);
+		switch (Application.getApp().serverMode) {
+			case StandAlone:
+				break;
+			case Server:
+				Application.getApp().server.move(move);
+				break;
+			case Client:
+				Application.getApp().client.move(move);
+				break;
+		}
 	}
 
 	/**
@@ -359,5 +368,14 @@ public class ChessEngine {
 		while (history.canUndo()) history.previous();
 		Application.getApp().mainWindow.panelInfo.textArea.setText("");
 		moveLast();
+	}
+	
+	/**
+	 * joue un coup joué sur l'ordinateur distant
+	 * @param move
+	 */
+	public void playDistant(HistoryMove move) {
+		history.setNextMove(move);
+		redo();
 	}
 }

@@ -4,10 +4,16 @@ import java.util.ResourceBundle;
 
 import javax.swing.JFrame;
 import java.awt.BorderLayout;
+
+import application.clientServer.Client;
+import application.clientServer.Server;
+import application.main.Application.ServerMode;
 import application.view.Board;
+
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import java.awt.event.KeyEvent;
@@ -16,6 +22,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -31,6 +39,9 @@ public class MainWindow extends JFrame implements ActionListener {
 
 	private final Board panelBoard = new Board(Application.getApp().engine.board);
 	public final PanelInfo panelInfo = new PanelInfo();
+	private final JMenu mnConnection = new JMenu(forms.getString("MainWindow.mnConnection.text")); //$NON-NLS-1$
+	private final JMenuItem mntmServer = new JMenuItem(forms.getString("MainWindow.mntmServer.text")); //$NON-NLS-1$
+	private final JMenuItem mntmClient = new JMenuItem(forms.getString("MainWindow.mntmClient.text")); //$NON-NLS-1$
 		
 	public MainWindow() {
 		this.setTitle(forms.getString("MainWindow.title")); //$NON-NLS-1$
@@ -66,6 +77,12 @@ public class MainWindow extends JFrame implements ActionListener {
 		mntmQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_MASK));
 		mntmQuit.addActionListener(this);		
 		mnGame.add(mntmQuit);
+		
+		menuBar.add(mnConnection);
+		mntmServer.addActionListener(this);		
+		mnConnection.add(mntmServer);
+		mntmClient.addActionListener(this);		
+		mnConnection.add(mntmClient);
 		this.setVisible(true);
 	}
 
@@ -76,18 +93,24 @@ public class MainWindow extends JFrame implements ActionListener {
 		} else if (event.getSource()==mntmNewGame) {
 			Application.getApp().engine.newGame();
 			panelInfo.textArea.setText("");
+			switch (Application.getApp().serverMode) {
+				case StandAlone:
+					break;
+				case Server:
+					Application.getApp().server.newGame();
+					break;
+				case Client:
+					Application.getApp().client.newGame();
+					break;
+			}
 		} else if (event.getSource()==mntmLoad) {
 			// On charge l'historique sous forme sérialisée à partir du fichier "game.cpg"
 			try (FileInputStream file = new FileInputStream("game.cpg")) {
 				try (ObjectInputStream ois = new ObjectInputStream(file)) {
 					Application.getApp().engine.load(ois);
 					ois.close();
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				} catch (ClassNotFoundException e) {}
+			} catch (IOException e) {}
 		} else if (event.getSource()==mntmSave) {
 			// On sauvegarde l'historique sous forme sérialisée dans un fichier "game.cpg"
 			try (FileOutputStream file = new FileOutputStream("game.cpg")) {
@@ -96,11 +119,22 @@ public class MainWindow extends JFrame implements ActionListener {
 					oos.flush();
 					oos.close();
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			} catch (IOException e) {}
 		} else if (event.getSource()==mntmSwitchSide) {
 			panelBoard.switchSide();
-		}
+		} else if (event.getSource()==mntmServer) {
+			Application.getApp().serverMode = ServerMode.Server;
+			Application.getApp().server = new Server();
+			Application.getApp().server.start();
+		} else if (event.getSource()==mntmClient) {
+			String address = (String) JOptionPane.showInputDialog(this, "Server IP address: ",
+                    "Enter server IP address", JOptionPane.PLAIN_MESSAGE,
+                    null, null, null);
+			try {
+				Application.getApp().serverMode = ServerMode.Client;
+				Application.getApp().client = new Client(InetAddress.getByName(address));
+				Application.getApp().client.start();
+			} catch (UnknownHostException e) {}
+		} 
 	}	
 }
