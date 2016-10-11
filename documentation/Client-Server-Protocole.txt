@@ -1,0 +1,12 @@
+Lorsque le client se connecte il envoie une trame <NewGame> au serveur.
+Les deux applis sont alors prètes à jouer une partie.
+Le joueur blanc commence à jouer et envoit une trame <HistoryMove> à son interlocuteur.
+La partie continue ainsi jusqu'à ce qu'un des deux joueurs envoie une trame <NewGame> pour recommencer une partie
+ou une trame <Deconnexion> pour fermer la connexion.
+
+Les trames se composent d'un header indiquant leur type (valeur de l'enum trame) et d'un bloc détail fonction du type de la trame.
+
+Trame <NewGame> Data=0;
+Trame <Deconnexion> Data=0
+Trame <HistoryMove> Data = objet HistoryMove serialisé
+	
