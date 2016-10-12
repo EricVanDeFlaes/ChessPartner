@@ -113,7 +113,7 @@ public class PieceHolder extends JLabel implements ICaseListener {
 		if (piece == null) {
 			setIcon(null);
 		} else {
-			String name = piece.type.toString()+piece.player.color.toString();
+			String name = piece.type.name()+piece.player.color.toString();
 			ImageIcon image = new ImageIcon(getClass().getClassLoader().getResource("resources/icones/"+name+".png"));
 			setIcon(image);
 		}

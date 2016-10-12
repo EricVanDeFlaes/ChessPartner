@@ -58,6 +58,9 @@ public class ChessEngine {
 					break;
 				}
 			}
+		} else if (piece.type==Piece.TypePiece.Pawn && piece.getPosition().coord.column!=destination.coord.column && getCase(destination.coord).getContent()==null) {
+			// Gestion de la capture de la prise en passant
+			board.cases[destination.coord.column][piece.getPosition().coord.line].getContent().remove();
 		}
 		piece.move(destination);
 		player = player.getOpponent();
@@ -82,23 +85,24 @@ public class ChessEngine {
 		HistoryMove move = history.undo();
 		Piece piece = getCase(move.destination).getContent();
 		// gestion du roque, on undo également la tour
-		if (piece.type==TypePiece.King && Math.abs(move.origin.column - move.destination.column)>1) {
+		if (piece.type==TypePiece.King && Math.abs(move.originPiece.coord.column - move.destination.column)>1) {
 			Case rookOrigin, rookDestination;
 			switch (move.destination.column) {
 				case 6: // petit roque
-					rookDestination = board.cases[5][move.origin.line];
-					rookOrigin = board.cases[7][move.origin.line];
+					rookDestination = board.cases[5][move.originPiece.coord.line];
+					rookOrigin = board.cases[7][move.originPiece.coord.line];
 					break;
 				default: // grand roque
-					rookDestination = board.cases[3][move.origin.line];
-					rookOrigin = board.cases[0][move.origin.line];
+					rookDestination = board.cases[3][move.originPiece.coord.line];
+					rookOrigin = board.cases[0][move.originPiece.coord.line];
 					break;
 			}
-			HistoryPiece rook = new HistoryPiece(Piece.TypePiece.Rook, piece.player.color, false);
-			HistoryMove rookMove = new HistoryMove(rook, rookOrigin.coord, rookDestination.coord);
+			HistoryPiece rook = new HistoryPiece(Piece.TypePiece.Rook, piece.player.color, false, rookOrigin.coord);
+			HistoryMove rookMove = new HistoryMove(rook, rookDestination.coord);
 			getCase(rookMove.destination).getContent().undo(rookMove);
 		}
 		piece.undo(move);
+		player = player.getOpponent();
 
 		// On supprime le coup de la notation de la partie
 		JTextArea txtArea = Application.getApp().mainWindow.panelInfo.textArea;
@@ -113,7 +117,7 @@ public class ChessEngine {
 	public void redo() {
 		if (history.isLast()) return;
 		HistoryMove move = history.redo();
-		doMove(getCase(move.origin).getContent(), Application.getApp().engine.getCase(move.destination));
+		doMove(getCase(move.originPiece.coord).getContent(), Application.getApp().engine.getCase(move.destination));
 		notateMove(move);
 		Application.getApp().mainWindow.panelInfo.panelHistorique.refresh(history);
 	}	
@@ -190,7 +194,7 @@ public class ChessEngine {
 				}
 				// gestion du roque
 				Piece pieceChecked;
-				if (!piece.hasMoved()) {
+				if (!piece.hasMoved() && !oppControlled.contains(piece.getPosition())) {
 					Direction directions[] = { Direction.Left, Direction.Right };
 					for (Direction direction: directions) {
 						checked = board.getCaseContigue(piece.getPosition(), direction);
@@ -228,7 +232,13 @@ public class ChessEngine {
 				}
 				// on rajoute les cases de capture
 				for (Case caseChecked: controlled) {
-					if (caseChecked.getContent()==null || caseChecked.getContent().player!=piece.player) {
+					if (caseChecked.getContent()==null) {
+						// gestion de la prise en passant, le dernier coup joué est il un pion à coté?
+						HistoryMove move = history.get();
+						if (move!=null && move.originPiece.type==TypePiece.Pawn && move.originPiece.moved==false && move.destination.line==piece.getPosition().coord.line && move.destination.column==caseChecked.coord.column) {
+							validMoves.add(caseChecked);
+						}						
+					} else if (caseChecked.getContent().player!=piece.player) {
 						validMoves.add(caseChecked);
 					}
 				}
